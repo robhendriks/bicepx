@@ -4,6 +4,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use log::{debug, info};
 
+use crate::bicep::BicepModule;
+
 mod az;
 mod bicep;
 mod config;
@@ -78,7 +80,12 @@ fn main() -> Result<()> {
 
             let root = config::Root::load_from_file(&ctx.config_path)?;
 
-            println!("{:#?}", root)
+            let modules = BicepModule::discover_module_paths(
+                ctx.config_path.parent().unwrap(),
+                root.modules.entrypoint,
+            )?;
+
+            println!("{:#?} {}", modules, modules.len())
         }
     }
 
