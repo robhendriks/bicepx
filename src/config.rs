@@ -1,6 +1,6 @@
 use std::{
     fs::{self},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -14,7 +14,7 @@ pub struct Root {
 
 #[derive(Deserialize, Debug)]
 pub struct Modules {
-    pub include_pattern: String,
+    pub entrypoint: PathBuf,
 }
 
 impl Root {
