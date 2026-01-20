@@ -1,4 +1,4 @@
-# bicepx
+# BicepX
 
 A simple CLI tool that helps you manage Bicep modules in monorepos, written in Rust.
 
