@@ -1,5 +1,11 @@
 # bicepx
 
+A simple CLI tool that helps you manage Bicep modules in monorepos, written in Rust.
+
+## Features
+
+- Todo
+
 ## Usage
 
 > [!IMPORTANT]
@@ -17,3 +23,8 @@ Options:
   -c, --config-file <CONFIG_FILE>  [env: BICEPX_CONFIG_FILE=] [default: bicepx.toml]
   -h, --help                       Print help
 ```
+
+## Contributors
+
+[![Contributors Count](https://img.shields.io/github/contributors-anon/robhendriks/bicepx)](https://github.com/robhendriks/bicepx/graphs/contributors)<br>
+[![Contributors Avatars](https://contributors-img.web.app/image?repo=robhendriks/bicepx)](https://github.com/robhendriks/bicepx/graphs/contributors)
