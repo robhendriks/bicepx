@@ -50,25 +50,14 @@ enum Commands {
     Build,
 }
 
-struct Context {
-    config_path: PathBuf,
-}
-
-impl Context {
-    fn from_cli(cli: &Cli) -> Context {
-        Context {
-            config_path: cli.get_config_path(),
-        }
-    }
-}
-
 fn main() -> Result<()> {
     env_logger::init();
 
     let cli = Cli::parse();
-    let ctx = Context::from_cli(&cli);
+    let config_path = cli.get_config_path();
 
-    info!("Using config: {}", ctx.config_path.display());
+    info!("Using working dir: {}", cli.working_dir.display());
+    info!("Using config: {}", config_path.display());
 
     match &cli.command {
         Commands::Build => {
@@ -78,14 +67,16 @@ fn main() -> Result<()> {
             info!("Using az cli: {}", az_version.cli);
             info!("Using az bicep: {}", az_bicep_version);
 
-            let root = config::Root::load_from_file(&ctx.config_path)?;
+            let root = config::Root::load_from_file(&config_path)?;
 
-            let modules = BicepModule::discover_module_paths(
-                ctx.config_path.parent().unwrap(),
-                root.modules.entrypoint,
-            )?;
+            let mod_paths =
+                BicepModule::discover_module_paths(cli.working_dir, root.modules.entrypoint)?;
 
-            println!("{:#?} {}", modules, modules.len())
+            info!("Discovered {} module(s)", mod_paths.len());
+
+            for mod_path in mod_paths {
+                println!("{}", mod_path.display())
+            }
         }
     }
 
