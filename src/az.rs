@@ -44,8 +44,8 @@ impl AzCli {
         let stdout_str = String::from_utf8(output.stdout)
             .with_context(|| "Failed to construct string from 'az bicep version' output")?;
 
-        // The command 'az bicep version' outputs 'Bicep CLI version 0.39.26 (1e90b06e40)'
-        // Use a regex to extract the semver portion we need
+        // The command 'az bicep version' outputs 'Bicep CLI version x.x.x (xxx)'
+        // Use a regex to extract the semver portion we need (x.x.x)
         let semver_re = Regex::new(r"([0-9]+\.[0-9]+\.[0-9]+)").unwrap();
         let semver_re_captures = semver_re
             .captures(&stdout_str)
