@@ -13,7 +13,7 @@ Commands:
   help   Print this message or the help of the given subcommand(s)
 
 Options:
-  -w, --working-dir <WORKING_DIR>  [env: BICEPX_WORKING_DIR=/home/rob/Git/devops/infrastructure/azure] [default: .]
+  -w, --working-dir <WORKING_DIR>  [env: BICEPX_WORKING_DIR=] [default: .]
   -c, --config-file <CONFIG_FILE>  [env: BICEPX_CONFIG_FILE=] [default: bicepx.toml]
   -h, --help                       Print help
 ```
