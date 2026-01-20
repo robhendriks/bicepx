@@ -73,19 +73,12 @@ fn main() -> Result<()> {
             let az_version = az::AzCli::get_version()?;
             let az_bicep_version = az::AzCli::get_bicep_version()?;
 
-            info!("Using az cli {}", az_version.cli);
-            info!("Using az bicep {}", az_bicep_version);
+            info!("Using az cli: {}", az_version.cli);
+            info!("Using az bicep: {}", az_bicep_version);
 
-            let cfg = config::Root::load_from_file(&ctx.config_path);
+            let root = config::Root::load_from_file(&ctx.config_path)?;
 
-            match cfg {
-                Ok(_root) => {
-                    // println!("{:#?}", root)
-                }
-                Err(e) => {
-                    eprintln!("Error: {:#}", e);
-                }
-            }
+            println!("{:#?}", root)
         }
     }
 
