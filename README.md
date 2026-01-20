@@ -1,1 +1,19 @@
 # bicepx
+
+## Usage
+
+> [!IMPORTANT]
+> The bicepx tool requires a local installation of [Azure CLI](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli) and [Bicep](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install).
+
+```
+Usage: bicepx [OPTIONS] <COMMAND>
+
+Commands:
+  build  
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -w, --working-dir <WORKING_DIR>  [env: BICEPX_WORKING_DIR=/home/rob/Git/devops/infrastructure/azure] [default: .]
+  -c, --config-file <CONFIG_FILE>  [env: BICEPX_CONFIG_FILE=] [default: bicepx.toml]
+  -h, --help                       Print help
+```
