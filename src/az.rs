@@ -2,8 +2,9 @@ use anyhow::{Context, Result};
 use regex::Regex;
 use semver::Version;
 use serde::Deserialize;
+use tokio::process::Command;
 
-use std::{process::Command, str::FromStr};
+use std::{path::Path, str::FromStr};
 
 #[derive(Deserialize)]
 pub struct AzVersion {
@@ -14,13 +15,14 @@ pub struct AzVersion {
 pub struct AzCli {}
 
 impl AzCli {
-    pub fn get_version() -> Result<AzVersion> {
+    pub async fn get_version() -> Result<AzVersion> {
         // Execute command
         let output = Command::new("az")
             .arg("version")
             .arg("--output")
             .arg("json")
             .output()
+            .await
             .with_context(|| "Failed to execute 'az version' command")?;
 
         // Get stdout as string
@@ -32,12 +34,13 @@ impl AzCli {
             .with_context(|| "Failed to deserialize 'az version' JSON output")
     }
 
-    pub fn get_bicep_version() -> Result<Version> {
+    pub async fn get_bicep_version() -> Result<Version> {
         // Execute command
         let output = Command::new("az")
             .arg("bicep")
             .arg("version")
             .output()
+            .await
             .with_context(|| "Failed to execute 'az bicep version' command")?;
 
         // Get stdout as string
@@ -56,5 +59,22 @@ impl AzCli {
         let version = Version::from_str(&version_str).unwrap();
 
         Ok(version)
+    }
+
+    pub async fn exec_bicep_build(file: impl AsRef<Path>) -> Result<String> {
+        let output = Command::new("az")
+            .arg("bicep")
+            .arg("build")
+            .arg("--file")
+            .arg(file.as_ref())
+            .arg("--stdout")
+            .output()
+            .await
+            .with_context(|| format!("Failed to build Bicep file {}", file.as_ref().display()))?;
+
+        let str = String::from_utf8(output.stdout)
+            .with_context(|| "Failed to construct string from 'az bicep build' output")?;
+
+        Ok(str)
     }
 }

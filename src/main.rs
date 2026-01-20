@@ -1,10 +1,17 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use log::{debug, info};
+use log::{debug, error, info};
+use tokio::sync::Semaphore;
 
-use crate::bicep::BicepModule;
+use crate::{az::AzCli, bicep::BicepModule};
 
 mod az;
 mod bicep;
@@ -50,7 +57,8 @@ enum Commands {
     Build,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     env_logger::init();
 
     let cli = Cli::parse();
@@ -61,8 +69,8 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Commands::Build => {
-            let az_version = az::AzCli::get_version()?;
-            let az_bicep_version = az::AzCli::get_bicep_version()?;
+            let az_version = AzCli::get_version().await?;
+            let az_bicep_version = AzCli::get_bicep_version().await?;
 
             info!("Using az cli: {}", az_version.cli);
             info!("Using az bicep: {}", az_bicep_version);
@@ -72,10 +80,31 @@ fn main() -> Result<()> {
             let mod_paths =
                 BicepModule::discover_module_paths(cli.working_dir, root.modules.entrypoint)?;
 
-            info!("Discovered {} module(s)", mod_paths.len());
+            let semaphore = Arc::new(Semaphore::new(4));
 
-            for mod_path in mod_paths {
-                println!("{}", mod_path.display())
+            let tasks: Vec<_> = mod_paths
+                .iter()
+                .map(|mod_path| {
+                    let mod_path = mod_path.clone();
+                    let semaphore = Arc::clone(&semaphore);
+
+                    tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await.unwrap();
+
+                        info!("Building module: {}", mod_path.display());
+
+                        match AzCli::exec_bicep_build(&mod_path).await {
+                            Ok(_) => {
+                                println!("COMPILE_OK {}", mod_path.display())
+                            }
+                            Err(err) => error!("{:#}", err),
+                        }
+                    })
+                })
+                .collect();
+
+            for task in tasks {
+                task.await?;
             }
         }
     }
