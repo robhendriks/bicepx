@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use log::debug;
+use log::{debug, info};
 
+mod az;
 mod bicep;
 mod config;
 
@@ -58,21 +60,27 @@ impl Context {
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     env_logger::init();
 
     let cli = Cli::parse();
     let ctx = Context::from_cli(&cli);
 
-    debug!("Using config: {}", ctx.config_path.display());
+    info!("Using config: {}", ctx.config_path.display());
 
     match &cli.command {
         Commands::Build => {
+            let az_version = az::AzCli::get_version()?;
+            let az_bicep_version = az::AzCli::get_bicep_version()?;
+
+            info!("Using az cli {}", az_version.cli);
+            info!("Using az bicep {}", az_bicep_version);
+
             let cfg = config::Root::load_from_file(&ctx.config_path);
 
             match cfg {
-                Ok(root) => {
-                    println!("{:#?}", root)
+                Ok(_root) => {
+                    // println!("{:#?}", root)
                 }
                 Err(e) => {
                     eprintln!("Error: {:#}", e);
@@ -82,4 +90,6 @@ fn main() {
     }
 
     debug!("Done");
+
+    Ok(())
 }
