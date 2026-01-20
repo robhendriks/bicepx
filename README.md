@@ -80,19 +80,25 @@ BicepX uses a TOML configuration file (default: `bicepx.toml`) to define build s
 
 ```toml
 [modules]
-include_pattern = "**/main.bicep"
+entrypoint = "bicep/main.bicep"
 ```
 
 `[modules]`
 
 Configuration for Bicep module discovery and processing.
 
-`include_pattern`
+`entrypoint`
 
-A glob pattern that specifies which Bicep files to include in the build.
+Specifies the file path pattern that identifies Bicep module entry points. BicepX will search for all files ending with this pattern in the directory structure.
 
-- Type: String (glob pattern)
-- Example: `"**/main.bicep"` - Matches all `main.bicep` files in any subdirectory
+- **Type**: String (file path pattern)
+- **Default**: `"bicep/main.bicep"`
+- **Example**: `"bicep/main.bicep"` - Matches all files ending with `bicep/main.bicep`, such as:
+  - `app-services/bicep/main.bicep`
+  - `api-services/api-management/bicep/main.bicep`
+  - `virtual-machines/virtual-machine/bicep/main.bicep`
+
+This allows BicepX to automatically discover modules in both flat and nested directory structures.
 
 ## Examples
 
