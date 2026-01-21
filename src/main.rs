@@ -1,17 +1,10 @@
-use std::{
-    path::PathBuf,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-};
+use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use log::{debug, error, info};
-use tokio::sync::Semaphore;
+use log::{debug, info};
 
-use crate::{az::AzCli, bicep::BicepModule};
+use crate::{az::AzCli, bicep::BicepProject};
 
 mod az;
 mod bicep;
@@ -77,35 +70,13 @@ async fn main() -> Result<()> {
 
             let root = config::Root::load_from_file(&config_path)?;
 
-            let mod_paths =
-                BicepModule::discover_module_paths(cli.working_dir, root.modules.entrypoint)?;
+            let mut bicep_project = BicepProject::new(cli.working_dir);
 
-            let semaphore = Arc::new(Semaphore::new(4));
+            bicep_project.discover_modules(root.modules.entrypoint)?;
 
-            let tasks: Vec<_> = mod_paths
-                .iter()
-                .map(|mod_path| {
-                    let mod_path = mod_path.clone();
-                    let semaphore = Arc::clone(&semaphore);
+            bicep_project.compile_modules().await?;
 
-                    tokio::spawn(async move {
-                        let _permit = semaphore.acquire().await.unwrap();
-
-                        info!("Building module: {}", mod_path.display());
-
-                        match AzCli::exec_bicep_build(&mod_path).await {
-                            Ok(_) => {
-                                println!("COMPILE_OK {}", mod_path.display())
-                            }
-                            Err(err) => error!("{:#}", err),
-                        }
-                    })
-                })
-                .collect();
-
-            for task in tasks {
-                task.await?;
-            }
+            println!("{:?}", bicep_project);
         }
     }
 

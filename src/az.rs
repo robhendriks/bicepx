@@ -6,6 +6,8 @@ use tokio::process::Command;
 
 use std::{path::Path, str::FromStr};
 
+use crate::bicep::BicepModule;
+
 #[derive(Deserialize)]
 pub struct AzVersion {
     #[serde(rename = "azure-cli")]
@@ -61,7 +63,7 @@ impl AzCli {
         Ok(version)
     }
 
-    pub async fn exec_bicep_build(file: impl AsRef<Path>) -> Result<String> {
+    pub async fn compile_module(file: impl AsRef<Path>) -> Result<BicepModule> {
         let output = Command::new("az")
             .arg("bicep")
             .arg("build")
@@ -72,9 +74,12 @@ impl AzCli {
             .await
             .with_context(|| format!("Failed to build Bicep file {}", file.as_ref().display()))?;
 
-        let str = String::from_utf8(output.stdout)
+        let source = String::from_utf8(output.stdout)
             .with_context(|| "Failed to construct string from 'az bicep build' output")?;
 
-        Ok(str)
+        Ok(BicepModule {
+            path: file.as_ref().to_path_buf(),
+            _source: source,
+        })
     }
 }
