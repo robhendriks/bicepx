@@ -4,9 +4,10 @@ use semver::Version;
 use serde::Deserialize;
 use tokio::process::Command;
 
-use std::{path::Path, str::FromStr};
-
-use crate::bicep::BicepModule;
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 #[derive(Deserialize)]
 pub struct AzVersion {
@@ -63,7 +64,7 @@ impl AzCli {
         Ok(version)
     }
 
-    pub async fn compile_module(file: impl AsRef<Path>) -> Result<BicepModule> {
+    pub async fn compile_module(file: impl AsRef<Path>) -> Result<(PathBuf, String)> {
         let output = Command::new("az")
             .arg("bicep")
             .arg("build")
@@ -77,9 +78,6 @@ impl AzCli {
         let source = String::from_utf8(output.stdout)
             .with_context(|| "Failed to construct string from 'az bicep build' output")?;
 
-        Ok(BicepModule {
-            path: file.as_ref().to_path_buf(),
-            _source: source,
-        })
+        Ok((file.as_ref().to_path_buf(), source))
     }
 }

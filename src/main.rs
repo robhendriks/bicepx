@@ -57,26 +57,33 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let config_path = cli.get_config_path();
 
-    info!("Using working dir: {}", cli.working_dir.display());
-    info!("Using config: {}", config_path.display());
+    info!("Working dir: {}", cli.working_dir.display());
+    info!("Config: {}", config_path.display());
 
     match &cli.command {
         Commands::Build => {
             let az_version = AzCli::get_version().await?;
             let az_bicep_version = AzCli::get_bicep_version().await?;
 
-            info!("Using az cli: {}", az_version.cli);
-            info!("Using az bicep: {}", az_bicep_version);
+            info!("az cli version: {}", az_version.cli);
+            info!("az bicep version: {}", az_bicep_version);
 
             let root = config::Root::load_from_file(&config_path)?;
 
             let mut bicep_project = BicepProject::new(cli.working_dir);
 
-            bicep_project.discover_modules(root.modules.entrypoint)?;
+            debug!(
+                "Looking for modules: **/{}",
+                root.modules.entrypoint.display()
+            );
+
+            let module_count = bicep_project.discover_modules(root.modules.entrypoint)?;
+
+            info!("Found {} Bicep module(s)", module_count);
 
             bicep_project.compile_modules().await?;
 
-            println!("{:?}", bicep_project);
+            // println!("{:?}", bicep_project);
         }
     }
 

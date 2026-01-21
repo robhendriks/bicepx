@@ -1,8 +1,11 @@
 use anyhow::Result;
-use log::{debug, error, info};
+use log::{error, info};
 use std::{
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 use tokio::sync::Semaphore;
 use walkdir::WalkDir;
@@ -11,9 +14,9 @@ use crate::az::AzCli;
 
 #[derive(Debug)]
 pub struct BicepProject {
-    root_path: PathBuf,
-    module_paths: Vec<PathBuf>,
-    modules: Vec<BicepModule>,
+    pub root_path: PathBuf,
+    pub module_paths: Vec<PathBuf>,
+    pub modules: Vec<BicepModule>,
 }
 
 impl BicepProject {
@@ -25,42 +28,64 @@ impl BicepProject {
         }
     }
 
-    pub fn discover_modules(&mut self, entrypoint: impl AsRef<Path>) -> Result<()> {
+    pub fn discover_modules(&mut self, entrypoint: impl AsRef<Path>) -> Result<usize> {
         self.module_paths.clear();
 
         for entry in WalkDir::new(&self.root_path).follow_links(false) {
             let entry = entry?;
             let path = entry.path();
 
-            if path.file_name() == Some("main.bicep".as_ref()) {
-                if path.ends_with(&entrypoint) {
-                    self.module_paths.push(path.to_path_buf())
-                }
+            if path.ends_with(&entrypoint) {
+                self.module_paths.push(path.to_path_buf())
             }
         }
 
         self.module_paths.sort();
 
-        Ok(())
+        Ok(self.module_paths.len())
     }
 
     pub async fn compile_modules(&mut self) -> Result<()> {
         self.modules.clear();
 
-        let compile_sem = Arc::new(Semaphore::new(4));
+        // Number of module to compile
+        let mod_count = self.module_paths.len();
+
+        // Control max parallel compile tasks
+        let semaphore = Arc::new(Semaphore::new(8));
+
+        // Count number of completed compile tasks
+        let completed = Arc::new(AtomicUsize::new(0));
+
         let compile_tasks: Vec<_> = self
             .module_paths
             .iter()
             .map(|mod_path| {
                 let mod_path = mod_path.clone();
-                let semaphore = Arc::clone(&compile_sem);
+                let semaphore = semaphore.clone();
+                let completed = completed.clone();
 
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await.unwrap();
+                    // Aquire semaphore
+                    let permit = semaphore.acquire().await?;
 
-                    info!("Building module: {}", mod_path.display());
+                    // Increment number of completed compile tasks
+                    let count = completed.fetch_add(1, Ordering::Relaxed) + 1;
 
-                    AzCli::compile_module(&mod_path).await
+                    info!(
+                        "[{}/{}] Compiling Bicep module {}",
+                        count,
+                        mod_count,
+                        mod_path.display()
+                    );
+
+                    // Compile Bicep file into JSON
+                    let response = AzCli::compile_module(&mod_path).await;
+
+                    // Release semaphore
+                    drop(permit);
+
+                    response
                 })
             })
             .collect();
@@ -69,9 +94,9 @@ impl BicepProject {
             let compile_result = compile_task.await?;
 
             match compile_result {
-                Ok(module) => {
-                    debug!("Bicep module OK {}", module.path.display());
-                    self.modules.push(module);
+                Ok((_path, _compiled_source)) => {
+                    // debug!("Bicep module OK {}", path.display());
+                    // self.modules.push(module);
                 }
                 Err(e) => {
                     error!("{:#}", e)
@@ -85,6 +110,6 @@ impl BicepProject {
 
 #[derive(Debug)]
 pub struct BicepModule {
-    pub path: PathBuf,
+    pub _path: PathBuf,
     pub _source: String,
 }
