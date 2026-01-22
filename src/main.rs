@@ -1,7 +1,9 @@
+use std::io::Write;
 use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use log::info;
 
 #[derive(Debug, Parser)]
 #[command(name = "bicepx")]
@@ -35,13 +37,13 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init();
+    env_logger::builder().format_timestamp(None).init();
 
     let cli = Cli::parse();
 
     match &cli.command {
         Commands::Init => {
-            println!("init");
+            info!("init");
             Ok(())
         }
     }
