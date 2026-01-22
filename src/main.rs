@@ -3,10 +3,6 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod az;
-mod bicep;
-mod config;
-
 #[derive(Debug, Parser)]
 #[command(name = "bicepx")]
 struct Cli {
@@ -26,25 +22,15 @@ struct Cli {
         short,
         long,
         global = true,
-        default_value = "bicepx.toml",
+        default_value = "bicepx.json",
         env = "BICEPX_CONFIG_FILE"
     )]
     config_file: PathBuf,
 }
 
-// impl Cli {
-//     fn get_config_path(&self) -> PathBuf {
-//         return if self.config_file.is_absolute() {
-//             self.config_file.clone()
-//         } else {
-//             self.working_dir.join(&self.config_file)
-//         };
-//     }
-// }
-
 #[derive(Debug, Subcommand)]
 enum Commands {
-    Build,
+    Init,
 }
 
 #[tokio::main]
@@ -54,10 +40,9 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Build => {
-            println!("Build")
+        Commands::Init => {
+            println!("init");
+            Ok(())
         }
     }
-
-    Ok(())
 }
