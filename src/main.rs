@@ -9,6 +9,7 @@ use crate::{
     project::Project,
 };
 
+mod azure;
 mod config;
 mod project;
 
@@ -112,7 +113,12 @@ async fn main() -> Result<()> {
             }
         }
         Commands::Format => {
-            info!("formatting")
+            azure::AzCli::init().await?;
+            azure::BicepCli::init().await?;
+
+            let _prj = ProjectConfig::load_from(prj_config_path).await?;
+
+            info!("format");
         }
     }
 

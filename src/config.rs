@@ -1,9 +1,18 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow};
+use semver::Version;
 use serde::{Deserialize, Serialize};
 
 pub trait Config: Serialize + for<'de> Deserialize<'de> {
+    async fn load_from(path: impl AsRef<Path>) -> Result<Self> {
+        let config_buf = tokio::fs::read(path).await.with_context(|| "")?;
+
+        let config = serde_json::from_slice::<Self>(&config_buf).with_context(|| "")?;
+
+        Ok(config)
+    }
+
     async fn save_to(&self, path: impl AsRef<Path>, overwrite: bool) -> Result<()> {
         let path_ref = path.as_ref();
 
@@ -36,6 +45,9 @@ impl Config for ProjectConfig {}
 #[derive(Serialize, Deserialize)]
 pub struct ModuleConfig {
     main: PathBuf,
+    version: Version,
+    lint: Option<bool>,
+    format: Option<bool>,
 }
 
 impl Config for ModuleConfig {}
@@ -44,6 +56,9 @@ impl ModuleConfig {
     pub fn new(main: impl AsRef<Path>) -> Self {
         ModuleConfig {
             main: main.as_ref().to_path_buf(),
+            lint: Some(true),
+            format: Some(true),
+            version: Version::new(0, 0, 1),
         }
     }
 }
