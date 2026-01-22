@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Result, anyhow};
 use semver::Version;
@@ -44,7 +44,6 @@ impl Config for ProjectConfig {}
 
 #[derive(Serialize, Deserialize)]
 pub struct ModuleConfig {
-    main: PathBuf,
     version: Version,
     lint: Option<bool>,
     format: Option<bool>,
@@ -53,9 +52,8 @@ pub struct ModuleConfig {
 impl Config for ModuleConfig {}
 
 impl ModuleConfig {
-    pub fn new(main: impl AsRef<Path>) -> Self {
+    pub fn new() -> Self {
         ModuleConfig {
-            main: main.as_ref().to_path_buf(),
             lint: Some(true),
             format: Some(true),
             version: Version::new(0, 0, 1),

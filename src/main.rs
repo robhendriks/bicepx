@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
-use log::{info, warn};
+use log::{error, info};
 
 use crate::{
     config::{Config, ModuleConfig, ProjectConfig},
@@ -54,7 +54,7 @@ struct InitArgs {
     name: Option<String>,
 
     #[arg(long)]
-    init_modules: Option<PathBuf>,
+    module_pattern: Option<PathBuf>,
 
     #[arg(short, long, default_value_t = false)]
     overwrite: bool,
@@ -82,31 +82,31 @@ async fn main() -> Result<()> {
 
             match prj_config.save_to(&prj_config_path, args.overwrite).await {
                 Ok(_) => {
-                    info!("Project config written to {}", prj_config_path.display());
+                    info!("Created '{}'", prj_config_path.display());
                 }
                 Err(err) => {
-                    warn!("{}", err)
+                    error!("{}", err)
                 }
             }
 
-            if let Some(init_modules) = &args.init_modules {
+            if let Some(init_modules) = &args.module_pattern {
                 info!("Initializing module config...");
 
-                let main = init_modules.file_name().unwrap();
-
                 let mut project = Project::new(&cli.working_dir);
-                let _ = project.discover_modules(init_modules).with_context(|| "")?;
+                let _ = project
+                    .discover_modules(init_modules)
+                    .with_context(|| "Failed to discover modules")?;
 
                 for module in project.modules {
-                    let mod_config = ModuleConfig::new(main);
+                    let mod_config = ModuleConfig::new();
                     let mod_config_path = module.root_path.join("module.json");
 
                     match mod_config.save_to(&mod_config_path, args.overwrite).await {
                         Ok(_) => {
-                            info!("Module config written to {}", mod_config_path.display());
+                            info!("Created '{}'", mod_config_path.display());
                         }
                         Err(err) => {
-                            warn!("{}", err)
+                            error!("{}", err)
                         }
                     }
                 }
