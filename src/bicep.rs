@@ -1,5 +1,7 @@
 use anyhow::Result;
 use log::{error, info};
+use serde::Deserialize;
+use serde_json::{Value, json};
 use std::{
     path::{Path, PathBuf},
     sync::{
@@ -94,9 +96,21 @@ impl BicepProject {
             let compile_result = compile_task.await?;
 
             match compile_result {
-                Ok((_path, _compiled_source)) => {
-                    // debug!("Bicep module OK {}", path.display());
-                    // self.modules.push(module);
+                Ok((path, source)) => {
+                    let mut module = BicepModule {
+                        meta: None,
+                        path,
+                        source,
+                    };
+
+                    match module.meta_from_source() {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("{:#}", e)
+                        }
+                    }
+
+                    self.modules.push(module);
                 }
                 Err(e) => {
                     error!("{:#}", e)
@@ -108,8 +122,32 @@ impl BicepProject {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct BicepModule {
-    pub _path: PathBuf,
-    pub _source: String,
+    pub path: PathBuf,
+    pub source: Vec<u8>,
+    pub meta: Option<BicepModuleMeta>,
+}
+
+impl BicepModule {
+    pub fn meta_from_source(&mut self) -> Result<()> {
+        let json: Value = serde_json::from_slice::<Value>(&self.source)?;
+
+        let meta = serde_json::from_value::<BicepModuleMeta>(json["metadata"].clone())?;
+        self.meta = Some(meta);
+
+        info!("{:#?}", self.meta);
+
+        Ok(())
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize, Debug)]
+pub struct BicepModuleMeta {
+    name: String,
+    description: String,
+    owner: String,
+    version: String,
 }
