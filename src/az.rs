@@ -64,7 +64,7 @@ impl AzCli {
         Ok(version)
     }
 
-    pub async fn compile_module(file: impl AsRef<Path>) -> Result<(PathBuf, String)> {
+    pub async fn compile_module(file: impl AsRef<Path>) -> Result<(PathBuf, Vec<u8>)> {
         let output = Command::new("az")
             .arg("bicep")
             .arg("build")
@@ -75,9 +75,6 @@ impl AzCli {
             .await
             .with_context(|| format!("Failed to build Bicep file {}", file.as_ref().display()))?;
 
-        let source = String::from_utf8(output.stdout)
-            .with_context(|| "Failed to construct string from 'az bicep build' output")?;
-
-        Ok((file.as_ref().to_path_buf(), source))
+        Ok((file.as_ref().to_path_buf(), output.stdout.clone()))
     }
 }
