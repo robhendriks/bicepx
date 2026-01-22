@@ -12,6 +12,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        includes:
+          - os: ubuntu-latest
+            artifact_name: linux-x64
+            binary_name: bicepx
+          - os: windows-latest
+            artifact_name: windows-x64
+            binary_name: bicepx.exe
+
     concurrency:
       group: ci-${{ matrix.os }}
       cancel-in-progress: true
@@ -38,5 +46,5 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: bin-${{ runner.os }}
-          path: target/release/bicepx*
+          name: ${{ matrix.artifact_name }}
+          path: target/release/${{ matrix.binary_name }}
