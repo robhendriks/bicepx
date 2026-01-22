@@ -39,4 +39,4 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: bin-${{ runner.os }}
-          path: target/release/bicepx
+          path: target/release/bicepx*
