@@ -10,7 +10,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-
+    concurrency:
+      group: ci
+      cancel-in-progress: true
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
