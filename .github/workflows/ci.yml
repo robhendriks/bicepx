@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -30,5 +34,5 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: binary
+          name: bin-${{ runner.os }}
           path: target/release/bicepx
