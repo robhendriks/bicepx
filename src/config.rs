@@ -45,8 +45,6 @@ impl Config for ProjectConfig {}
 #[derive(Serialize, Deserialize)]
 pub struct ModuleConfig {
     version: Version,
-    lint: Option<bool>,
-    format: Option<bool>,
 }
 
 impl Config for ModuleConfig {}
@@ -54,8 +52,6 @@ impl Config for ModuleConfig {}
 impl ModuleConfig {
     pub fn new() -> Self {
         ModuleConfig {
-            lint: Some(true),
-            format: Some(true),
             version: Version::new(0, 0, 1),
         }
     }
