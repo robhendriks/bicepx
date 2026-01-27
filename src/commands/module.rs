@@ -1,7 +1,7 @@
 use clap::{Args, Subcommand};
 use log::info;
 
-use crate::cli::Cli;
+use crate::cli::Ctx;
 
 #[derive(Debug, Args)]
 pub struct ModuleArgs {
@@ -10,7 +10,7 @@ pub struct ModuleArgs {
 }
 
 impl ModuleArgs {
-    pub async fn exec(&self, _cli: &Cli) -> anyhow::Result<()> {
+    pub async fn exec(&self, _ctx: &Ctx) -> anyhow::Result<()> {
         match &self.command {
             ModuleCommands::List => {
                 info!("MODULE LIST");

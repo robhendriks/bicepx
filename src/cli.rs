@@ -6,17 +6,10 @@ use crate::commands::{init::InitArgs, module::ModuleArgs};
 
 #[derive(Debug, Parser)]
 pub struct Cli {
-    #[arg(
-        short,
-        long,
-        global = true,
-        env = "BICEPX_WORKING_DIR",
-        default_value = "."
-    )]
+    #[arg(long, global = true, env = "BICEPX_WORKING_DIR", default_value = ".")]
     pub working_dir: PathBuf,
 
     #[arg(
-        short,
         long,
         global = true,
         env = "BICEPX_CONFIG",
@@ -24,26 +17,40 @@ pub struct Cli {
     )]
     pub config: PathBuf,
 
-    #[arg(long, global = true, default_value_t = false)]
-    pub no_interact: bool,
-
     #[command(subcommand)]
     pub command: Commands,
 }
 
 impl Cli {
     pub async fn exec(&self) -> anyhow::Result<()> {
+        let ctx = Ctx::from_cli(&self);
+
         match &self.command {
-            Commands::Init(args) => args.exec(&self).await,
-            Commands::Module(args) => args.exec(&self).await,
+            Commands::Init(args) => args.exec(&ctx).await,
+            Commands::Module(args) => args.exec(&ctx).await,
         }
     }
 
-    pub fn get_config_path(&self) -> PathBuf {
+    fn get_config_path(&self) -> PathBuf {
         if self.config.is_absolute() {
             self.config.clone()
         } else {
             self.working_dir.join(&self.config)
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Ctx {
+    pub working_dir: PathBuf,
+    pub config_path: PathBuf,
+}
+
+impl Ctx {
+    fn from_cli(cli: &Cli) -> Self {
+        Ctx {
+            working_dir: cli.working_dir.clone(),
+            config_path: cli.get_config_path(),
         }
     }
 }

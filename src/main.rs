@@ -6,6 +6,8 @@ mod azure;
 mod cli;
 mod commands;
 mod config;
+mod project;
+mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -1,6 +1,7 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, anyhow};
+use semver::Version;
 use serde::{Deserialize, Serialize};
 
 pub trait SaveAsJson: Serialize {
@@ -37,20 +38,29 @@ pub trait LoadFromJson: for<'de> Deserialize<'de> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RootConfig {
-    pub module_entrypoint: String,
+pub struct ProjectConfig {
+    pub modules: ProjectModulesConfig,
 }
 
-impl SaveAsJson for RootConfig {}
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ModuleConfig {}
+pub struct ProjectModulesConfig {
+    pub pattern: PathBuf,
+}
 
-#[allow(dead_code)]
+impl ProjectConfig {}
+
+impl SaveAsJson for ProjectConfig {}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ModuleConfig {
+    pub version: Version,
+}
+
 impl ModuleConfig {
-    pub fn new() -> Self {
-        ModuleConfig {}
+    pub fn default() -> Self {
+        ModuleConfig {
+            version: Version::new(0, 0, 1),
+        }
     }
 }
 
