@@ -1,58 +1,61 @@
 use std::path::Path;
 
-use anyhow::{Context, Result, anyhow};
-use semver::Version;
+use anyhow::{Context, anyhow};
 use serde::{Deserialize, Serialize};
 
-pub trait Config: Serialize + for<'de> Deserialize<'de> {
-    async fn load_from(path: impl AsRef<Path>) -> Result<Self> {
-        let config_buf = tokio::fs::read(path).await.with_context(|| "")?;
-
-        let config = serde_json::from_slice::<Self>(&config_buf).with_context(|| "")?;
-
-        Ok(config)
-    }
-
-    async fn save_to(&self, path: impl AsRef<Path>, overwrite: bool) -> Result<()> {
+pub trait SaveAsJson: Serialize {
+    async fn save_as_json(&self, path: impl AsRef<Path>, overwrite: bool) -> anyhow::Result<()> {
         let path_ref = path.as_ref();
 
         if !overwrite && path_ref.exists() {
-            return Err(anyhow!("File exists at {}", path_ref.display()));
+            return Err(anyhow!("File already exists"));
         }
 
-        let proj_config_buf = serde_json::to_vec_pretty(&self)
-            .with_context(|| format!("Failed to serialize JSON {}", path_ref.display()))?;
+        let contents =
+            serde_json::to_vec_pretty(&self).with_context(|| "Failed to serialize JSON")?;
 
-        tokio::fs::write(path_ref, &proj_config_buf)
+        tokio::fs::write(&path, &contents)
             .await
-            .with_context(|| format!("Failed to write file {}", path_ref.display()))?;
+            .with_context(|| "Failed to write JSON to file")?;
 
         Ok(())
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct ProjectConfig {}
+#[allow(dead_code)]
+pub trait LoadFromJson: for<'de> Deserialize<'de> {
+    async fn load_from_json(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        let contents = tokio::fs::read(&path)
+            .await
+            .with_context(|| "Failed to read JSON from file")?;
 
-impl ProjectConfig {
-    pub fn new() -> Self {
-        ProjectConfig {}
+        let obj = serde_json::from_slice::<Self>(&contents)
+            .with_context(|| "Failed to deserialize JSON")?;
+
+        Ok(obj)
     }
 }
 
-impl Config for ProjectConfig {}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RootConfig {}
 
-#[derive(Serialize, Deserialize)]
-pub struct ModuleConfig {
-    version: Version,
+impl RootConfig {
+    pub fn new() -> Self {
+        RootConfig {}
+    }
 }
 
-impl Config for ModuleConfig {}
+impl SaveAsJson for RootConfig {}
 
+#[allow(dead_code)]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ModuleConfig {}
+
+#[allow(dead_code)]
 impl ModuleConfig {
     pub fn new() -> Self {
-        ModuleConfig {
-            version: Version::new(0, 0, 1),
-        }
+        ModuleConfig {}
     }
 }
+
+impl SaveAsJson for ModuleConfig {}

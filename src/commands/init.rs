@@ -1,8 +1,11 @@
-use anyhow::Result;
+use anyhow::{Context, Ok};
 use clap::Args;
-use log::{error, info};
+use log::info;
 
-use crate::{cli::Cli, config::Config, config::ProjectConfig};
+use crate::{
+    cli::Cli,
+    config::{RootConfig, SaveAsJson},
+};
 
 #[derive(Debug, Args)]
 pub struct InitArgs {
@@ -10,18 +13,18 @@ pub struct InitArgs {
     force: bool,
 }
 
-pub async fn execute(cli: &Cli, args: &InitArgs) -> Result<()> {
-    let prj_config_path = cli.get_config_path();
-    let prj_config = ProjectConfig::new();
+impl InitArgs {
+    pub async fn exec(&self, _cli: &Cli) -> anyhow::Result<()> {
+        let config = RootConfig::new();
+        let config_path = _cli.get_config_path();
 
-    match prj_config.save_to(&prj_config_path, args.force).await {
-        Ok(_) => {
-            info!("Created '{}'", prj_config_path.display());
-        }
-        Err(err) => {
-            error!("{}", err)
-        }
+        info!("Creating root config: {}", config_path.display());
+
+        config
+            .save_as_json(&config_path, self.force)
+            .await
+            .with_context(|| "Failed to create root config")?;
+
+        Ok(())
     }
-
-    Ok(())
 }

@@ -1,22 +1,17 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::commands::{init, module};
+use crate::commands::{init::InitArgs, module::ModuleArgs};
 
 #[derive(Debug, Parser)]
-#[command(name = "bicepx")]
 pub struct Cli {
-    #[command(subcommand)]
-    pub command: Commands,
-
     #[arg(
         short,
         long,
         global = true,
-        default_value = ".",
-        env = "BICEPX_WORKING_DIR"
+        env = "BICEPX_WORKING_DIR",
+        default_value = "."
     )]
     pub working_dir: PathBuf,
 
@@ -24,13 +19,23 @@ pub struct Cli {
         short,
         long,
         global = true,
-        default_value = "bicepx.json",
-        env = "BICEPX_CONFIG"
+        env = "BICEPX_CONFIG",
+        default_value = "bicepx.json"
     )]
     pub config: PathBuf,
+
+    #[command(subcommand)]
+    pub command: Commands,
 }
 
 impl Cli {
+    pub async fn exec(&self) -> anyhow::Result<()> {
+        match &self.command {
+            Commands::Init(args) => args.exec(&self).await,
+            Commands::Module(args) => args.exec(&self).await,
+        }
+    }
+
     pub fn get_config_path(&self) -> PathBuf {
         if self.config.is_absolute() {
             self.config.clone()
@@ -38,17 +43,10 @@ impl Cli {
             self.working_dir.join(&self.config)
         }
     }
-
-    pub async fn execute(&self) -> Result<()> {
-        match &self.command {
-            Commands::Init(args) => init::execute(self, args).await,
-            Commands::Module(args) => module::ModuleArgs::execute(self, args).await,
-        }
-    }
 }
 
 #[derive(Debug, Subcommand)]
-enum Commands {
-    Init(init::InitArgs),
-    Module(module::ModuleArgs),
+pub enum Commands {
+    Init(InitArgs),
+    Module(ModuleArgs),
 }
