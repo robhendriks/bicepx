@@ -1,5 +1,8 @@
+use std::path::PathBuf;
+
 use clap::{Args, Subcommand};
-use log::info;
+use semver::Version;
+use serde::Serialize;
 
 use crate::{cli::Ctx, project::Project};
 
@@ -14,12 +17,18 @@ impl ModuleArgs {
         match &self.command {
             ModuleCommands::List => {
                 let mut project = Project::from_ctx(&ctx).await?;
-
                 project.init().await?;
 
-                for module in &project.modules {
-                    info!("{} v{}", module.root.display(), module.config.version);
-                }
+                let json_view_models: Vec<ModuleJson> = project
+                    .modules
+                    .iter()
+                    .map(|m| ModuleJson {
+                        path: &m.root,
+                        version: &m.config.version,
+                    })
+                    .collect();
+
+                println!("{}", serde_json::to_string_pretty(&json_view_models)?)
             }
         }
 
@@ -31,4 +40,13 @@ impl ModuleArgs {
 pub enum ModuleCommands {
     #[command(alias = "ls")]
     List,
+}
+
+#[derive(Serialize)]
+struct ModuleJson<'a> {
+    #[serde(borrow)]
+    path: &'a PathBuf,
+
+    #[serde(borrow)]
+    version: &'a Version,
 }
