@@ -53,12 +53,14 @@ impl LoadFromJson for ProjectConfig {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModuleConfig {
+    pub name: String,
     pub version: Version,
 }
 
 impl ModuleConfig {
-    pub fn default() -> Self {
+    pub fn default(name: &str) -> Self {
         ModuleConfig {
+            name: String::from(name),
             version: Version::new(0, 0, 1),
         }
     }

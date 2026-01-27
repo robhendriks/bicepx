@@ -56,7 +56,7 @@ impl InitArgs {
 
             let module_config_path = module_root_path.join("module.json");
 
-            let module_config = ModuleConfig::default();
+            let module_config = ModuleConfig::default("name");
 
             info!("Creating module at {}", module_root_path.display());
 

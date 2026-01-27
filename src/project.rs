@@ -24,6 +24,10 @@ impl Project {
         })
     }
 
+    pub fn find_module(&self, name: &str) -> Option<&Module> {
+        self.modules.iter().find(|e| e.config.name == name)
+    }
+
     pub async fn init(&mut self) -> anyhow::Result<()> {
         self.discover_module_root_paths()?;
         self.init_modules().await

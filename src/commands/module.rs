@@ -4,7 +4,10 @@ use clap::{Args, Subcommand};
 use semver::Version;
 use serde::Serialize;
 
-use crate::{cli::Ctx, project::Project};
+use crate::{
+    cli::Ctx,
+    project::{Module, Project},
+};
 
 #[derive(Debug, Args)]
 pub struct ModuleArgs {
@@ -14,21 +17,26 @@ pub struct ModuleArgs {
 
 impl ModuleArgs {
     pub async fn exec(&self, ctx: &Ctx) -> anyhow::Result<()> {
+        let mut project = Project::from_ctx(&ctx).await?;
+
+        project.init().await?;
+
         match &self.command {
             ModuleCommands::List => {
-                let mut project = Project::from_ctx(&ctx).await?;
-                project.init().await?;
+                let module_list_json = get_module_list_json(&project);
 
-                let json_view_models: Vec<ModuleJson> = project
-                    .modules
-                    .iter()
-                    .map(|m| ModuleJson {
-                        path: &m.root,
-                        version: &m.config.version,
-                    })
-                    .collect();
+                println!("{}", serde_json::to_string_pretty(&module_list_json)?)
+            }
+            ModuleCommands::Show(args) => {
+                let module = project.find_module(&args.name);
 
-                println!("{}", serde_json::to_string_pretty(&json_view_models)?)
+                match module {
+                    Some(module) => {
+                        let module_json = get_module_json(module);
+                        println!("{}", serde_json::to_string_pretty(&module_json)?);
+                    }
+                    None => return Err(anyhow::anyhow!("Module not found: {}", args.name)),
+                }
             }
         }
 
@@ -40,13 +48,43 @@ impl ModuleArgs {
 pub enum ModuleCommands {
     #[command(alias = "ls")]
     List,
+    Show(ModuleShowArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct ModuleShowArgs {
+    #[arg(short, long)]
+    pub name: String,
 }
 
 #[derive(Serialize)]
 struct ModuleJson<'a> {
     #[serde(borrow)]
-    path: &'a PathBuf,
+    name: &'a str,
 
     #[serde(borrow)]
     version: &'a Version,
+
+    #[serde(borrow)]
+    path: &'a PathBuf,
+}
+
+fn get_module_list_json<'a>(project: &'a Project) -> Vec<ModuleJson<'a>> {
+    project
+        .modules
+        .iter()
+        .map(|m| ModuleJson {
+            name: &m.config.name,
+            version: &m.config.version,
+            path: &m.root,
+        })
+        .collect()
+}
+
+fn get_module_json<'a>(module: &'a Module) -> ModuleJson<'a> {
+    ModuleJson {
+        name: &module.config.name,
+        version: &module.config.version,
+        path: &module.root,
+    }
 }
