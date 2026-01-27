@@ -42,13 +42,17 @@ impl InitArgs {
     }
 
     async fn init_module_config(&self, ctx: &Ctx) -> anyhow::Result<()> {
-        let module_path = ctx.working_dir.join(&self.pattern);
-        let module_path_str = module_path.to_str().with_context(|| "")?;
+        let module_pattern = ctx.working_dir.join(&self.pattern);
+        let module_pattern_str = module_pattern
+            .to_str()
+            .with_context(|| "Failed to construct module pattern")?;
 
-        let module_paths = glob(module_path_str)?.filter_map(|e| e.ok());
+        let module_paths = glob(module_pattern_str)?.filter_map(|e| e.ok());
 
         for module_path in module_paths {
-            let module_root_path = module_path.parent().with_context(|| "")?;
+            let module_root_path = module_path
+                .parent()
+                .with_context(|| "Failed to get module root path")?;
 
             let module_config_path = module_root_path.join("module.json");
 

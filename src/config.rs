@@ -23,7 +23,6 @@ pub trait SaveAsJson: Serialize {
     }
 }
 
-#[allow(dead_code)]
 pub trait LoadFromJson: for<'de> Deserialize<'de> {
     async fn load_from_json(path: impl AsRef<Path>) -> anyhow::Result<Self> {
         let contents = tokio::fs::read(&path)
@@ -50,6 +49,7 @@ pub struct ProjectModulesConfig {
 impl ProjectConfig {}
 
 impl SaveAsJson for ProjectConfig {}
+impl LoadFromJson for ProjectConfig {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModuleConfig {
@@ -65,3 +65,4 @@ impl ModuleConfig {
 }
 
 impl SaveAsJson for ModuleConfig {}
+impl LoadFromJson for ModuleConfig {}
