@@ -1,5 +1,6 @@
-use anyhow::{Context, Ok};
+use anyhow::Context;
 use clap::Args;
+use inquire::Text;
 use log::info;
 
 use crate::{
@@ -11,12 +12,20 @@ use crate::{
 pub struct InitArgs {
     #[arg(short, long, default_value_t = false)]
     force: bool,
+
+    #[arg(short, long, default_value = "bicep/main.bicep")]
+    module_entrypoint: String,
 }
 
 impl InitArgs {
-    pub async fn exec(&self, _cli: &Cli) -> anyhow::Result<()> {
-        let config = RootConfig::new();
-        let config_path = _cli.get_config_path();
+    pub async fn exec(&self, cli: &Cli) -> anyhow::Result<()> {
+        let module_entrypoint = cli.prompt_or(
+            || Text::new("Module entrypoint").with_default("bicep/main.bicep"),
+            || self.module_entrypoint.clone(),
+        )?;
+
+        let config = RootConfig { module_entrypoint };
+        let config_path = cli.get_config_path();
 
         info!("Creating root config: {}", config_path.display());
 

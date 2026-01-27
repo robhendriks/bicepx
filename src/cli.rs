@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use inquire::Text;
 
 use crate::commands::{init::InitArgs, module::ModuleArgs};
 
@@ -24,6 +25,9 @@ pub struct Cli {
     )]
     pub config: PathBuf,
 
+    #[arg(long, global = true, default_value_t = false)]
+    pub no_interact: bool,
+
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -41,6 +45,23 @@ impl Cli {
             self.config.clone()
         } else {
             self.working_dir.join(&self.config)
+        }
+    }
+
+    pub fn prompt_or<'a, 'b, PF, VF>(
+        &self,
+        prompt_factory: PF,
+        value_factory: VF,
+    ) -> anyhow::Result<String>
+    where
+        PF: Fn() -> Text<'a, 'b>,
+        VF: Fn() -> String,
+    {
+        if self.no_interact {
+            Ok(value_factory())
+        } else {
+            let prompt = prompt_factory();
+            Ok(prompt.prompt()?)
         }
     }
 }

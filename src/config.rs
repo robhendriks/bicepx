@@ -37,12 +37,8 @@ pub trait LoadFromJson: for<'de> Deserialize<'de> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RootConfig {}
-
-impl RootConfig {
-    pub fn new() -> Self {
-        RootConfig {}
-    }
+pub struct RootConfig {
+    pub module_entrypoint: String,
 }
 
 impl SaveAsJson for RootConfig {}

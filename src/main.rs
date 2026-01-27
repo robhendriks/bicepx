@@ -2,6 +2,7 @@ use clap::Parser;
 
 use crate::cli::Cli;
 
+mod azure;
 mod cli;
 mod commands;
 mod config;

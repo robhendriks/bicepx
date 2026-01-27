@@ -12,9 +12,6 @@ pub struct ModuleArgs {
 impl ModuleArgs {
     pub async fn exec(&self, _cli: &Cli) -> anyhow::Result<()> {
         match &self.command {
-            ModuleCommands::Init => {
-                info!("MODULE INIT");
-            }
             ModuleCommands::List => {
                 info!("MODULE LIST");
             }
@@ -26,6 +23,5 @@ impl ModuleArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum ModuleCommands {
-    Init,
     List,
 }
