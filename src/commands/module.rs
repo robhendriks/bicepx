@@ -25,7 +25,7 @@ impl ModuleArgs {
             ModuleCommands::List => {
                 let module_list_json = get_module_list_json(&project);
 
-                println!("{}", serde_json::to_string_pretty(&module_list_json)?)
+                println!("{}", serde_json::to_string_pretty(&module_list_json)?);
             }
             ModuleCommands::Show(args) => {
                 let module = project.find_module(&args.name);
