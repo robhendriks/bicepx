@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::Args;
 use glob::glob;
-use log::info;
+use log::{error, info};
 
 use crate::{
     cli::Ctx,
@@ -38,7 +38,14 @@ impl InitArgs {
 
         info!("Creating project config at {}", ctx.config_path.display());
 
-        config.save_as_json(&ctx.config_path, self.overwrite).await
+        let result = config.save_as_json(&ctx.config_path, self.overwrite).await;
+
+        match result {
+            Ok(_) => {}
+            Err(e) => error!("Failed to create project config: {}", e),
+        }
+
+        Ok(())
     }
 
     async fn init_module_config(&self, ctx: &Ctx) -> anyhow::Result<()> {
@@ -56,13 +63,20 @@ impl InitArgs {
 
             let module_config_path = module_root_path.join("module.json");
 
-            let module_config = ModuleConfig::default("name");
+            let module_name = module_root_path.parent().with_context(|| "")?;
+
+            let module_config = ModuleConfig::default(module_name.to_str().unwrap());
 
             info!("Creating module at {}", module_root_path.display());
 
-            module_config
+            let result = module_config
                 .save_as_json(&module_config_path, self.overwrite)
-                .await?;
+                .await;
+
+            match result {
+                Ok(_) => {}
+                Err(e) => error!("Failed to create module config: {}", e),
+            }
         }
 
         Ok(())
