@@ -1,3 +1,4 @@
+use semver::Version;
 use serde::Serialize;
 use std::{
     cell::RefCell,
@@ -78,21 +79,25 @@ impl Module {
             .collect())
     }
 
-    pub fn to_json(&self) -> ModuleJson {
+    pub fn to_json<'se>(&'se self) -> ModuleJson<'se> {
         let project_rc = self.project.upgrade().unwrap();
         let project = project_rc.borrow();
 
         ModuleJson {
+            name: &self.config.name,
             path: self.root.strip_prefix(&project.root).unwrap().to_path_buf(),
-            main: self.config.main.to_owned(),
-            version: self.config.version.to_string(),
+            main: &self.config.main,
+            version: &self.config.version,
+            categories: &self.config.categories,
         }
     }
 }
 
 #[derive(Serialize)]
-pub struct ModuleJson {
+pub struct ModuleJson<'se> {
+    pub name: &'se str,
     pub path: PathBuf,
-    pub main: String,
-    pub version: String,
+    pub main: &'se str,
+    pub version: &'se Version,
+    pub categories: &'se Vec<String>,
 }

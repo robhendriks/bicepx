@@ -39,10 +39,12 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
             let module_root = module_path.parent().unwrap();
             let module_main = module_path.iter().last().unwrap().to_str().unwrap();
 
-            let (module_name, module_tags) = infer_module_name_and_tags(&module_path, &module_glob)
-                .unwrap_or_else(|| (String::from(""), vec![]));
+            let (module_name, module_categories) =
+                infer_module_name_and_categories(&module_path, &module_glob)
+                    .unwrap_or_else(|| (String::from(""), vec![]));
 
-            let module_cfg = config::module::Cfg::new(&module_name, &module_main, module_tags);
+            let module_cfg =
+                config::module::Cfg::new(&module_name, &module_main, module_categories);
             let module_cfg_file = config::module::Cfg::build_path(&module_root);
 
             let _ =
@@ -54,7 +56,7 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
     Ok(())
 }
 
-fn infer_module_name_and_tags(
+fn infer_module_name_and_categories(
     module_path: &Path,
     module_glob: &Path,
 ) -> Option<(String, Vec<String>)> {
@@ -67,9 +69,9 @@ fn infer_module_name_and_tags(
         .last()
         .map_or_else(|| String::from(""), |s| s.to_owned());
 
-    let tags: Vec<String> = comps.iter().rev().skip(1).map(|s| s.to_string()).collect();
+    let categories: Vec<String> = comps.iter().rev().skip(1).map(|s| s.to_string()).collect();
 
-    Some((name, tags))
+    Some((name, categories))
 }
 
 async fn create_or_update_json_file<T>(

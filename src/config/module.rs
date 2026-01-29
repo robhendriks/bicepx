@@ -12,7 +12,7 @@ pub struct Cfg {
     pub name: String,
     pub main: String,
     pub version: Version,
-    pub tags: Vec<String>,
+    pub categories: Vec<String>,
 }
 
 impl Cfg {
@@ -20,12 +20,12 @@ impl Cfg {
         base.as_ref().join(FILE_NAME)
     }
 
-    pub fn new(name: &str, main: &str, tags: Vec<String>) -> Self {
+    pub fn new(name: &str, main: &str, categories: Vec<String>) -> Self {
         Cfg {
             name: name.to_owned(),
             main: main.to_owned(),
             version: Version::new(0, 1, 0),
-            tags,
+            categories,
         }
     }
 }
