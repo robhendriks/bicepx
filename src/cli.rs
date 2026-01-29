@@ -1,62 +1,36 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::commands::{init::InitArgs, module::ModuleArgs};
+use crate::command::{
+    init::{self, InitArgs},
+    list::{self, ListArgs},
+    show::{self, ShowArgs},
+};
 
 #[derive(Debug, Parser)]
 pub struct Cli {
-    #[arg(long, global = true, env = "BICEPX_WORKING_DIR", default_value = ".")]
-    pub working_dir: PathBuf,
-
-    #[arg(
-        long,
-        global = true,
-        env = "BICEPX_CONFIG",
-        default_value = "bicepx.json"
-    )]
-    pub config: PathBuf,
+    #[arg(short, long, default_value = ".", env = "BICEPX_ROOT", global = true)]
+    pub root: PathBuf,
 
     #[command(subcommand)]
-    pub command: Commands,
+    command: Commands,
 }
 
 impl Cli {
-    pub async fn exec(&self) -> anyhow::Result<()> {
-        let ctx = Ctx::from_cli(&self);
-
+    pub async fn exec(&self) -> Result<()> {
         match &self.command {
-            Commands::Init(args) => args.exec(&ctx).await,
-            Commands::Module(args) => args.exec(&ctx).await,
-        }
-    }
-
-    fn get_config_path(&self) -> PathBuf {
-        if self.config.is_absolute() {
-            self.config.clone()
-        } else {
-            self.working_dir.join(&self.config)
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Ctx {
-    pub working_dir: PathBuf,
-    pub config_path: PathBuf,
-}
-
-impl Ctx {
-    fn from_cli(cli: &Cli) -> Self {
-        Ctx {
-            working_dir: cli.working_dir.clone(),
-            config_path: cli.get_config_path(),
+            Commands::Init(args) => init::exec(self, args).await,
+            Commands::List(args) => list::exec(self, args).await,
+            Commands::Show(args) => show::exec(self, args).await,
         }
     }
 }
 
 #[derive(Debug, Subcommand)]
-pub enum Commands {
+enum Commands {
     Init(InitArgs),
-    Module(ModuleArgs),
+    List(ListArgs),
+    Show(ShowArgs),
 }

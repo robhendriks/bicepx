@@ -1,17 +1,15 @@
+use anyhow::Result;
 use clap::Parser;
 
 use crate::cli::Cli;
 
-mod azure;
 mod cli;
-mod commands;
+mod command;
 mod config;
-mod project;
-mod util;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    env_logger::builder().format_timestamp(None).init();
+async fn main() -> Result<()> {
+    env_logger::init();
 
     let cli = Cli::parse();
 
