@@ -20,11 +20,7 @@ pub struct InitArgs {
 
 pub async fn exec(cli: &Cli, args: &InitArgs) -> Result<()> {
     init_root(&cli, &args).await?;
-    init_modules(&cli, &args).await?;
-
-    info!("Done");
-
-    Ok(())
+    init_modules(&cli, &args).await
 }
 
 async fn init_root(cli: &Cli, args: &InitArgs) -> Result<()> {
