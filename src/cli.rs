@@ -33,6 +33,7 @@ impl Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     Init(InitArgs),
+    #[command(alias = "ls")]
     List(ListArgs),
     Show(ShowArgs),
     Docs(DocsArgs),

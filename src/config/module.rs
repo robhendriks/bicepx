@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::json;
 
+pub const FILE_NAME: &'static str = "module.json";
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Cfg {
     pub name: String,
@@ -13,7 +15,6 @@ pub struct Cfg {
 
 impl Cfg {
     pub fn build_path(base: impl AsRef<Path>) -> PathBuf {
-        const FILE_NAME: &'static str = "module.json";
         base.as_ref().join(FILE_NAME)
     }
 
