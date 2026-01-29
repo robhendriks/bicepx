@@ -10,6 +10,7 @@ pub const FILE_NAME: &'static str = "module.json";
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Cfg {
     pub name: String,
+    pub main: String,
     pub version: Version,
 }
 
@@ -18,9 +19,10 @@ impl Cfg {
         base.as_ref().join(FILE_NAME)
     }
 
-    pub fn default() -> Self {
+    pub fn new(name: &str, main: &str) -> Self {
         Cfg {
-            name: String::from(""),
+            name: name.to_owned(),
+            main: main.to_owned(),
             version: Version::new(0, 0, 0),
         }
     }

@@ -5,6 +5,7 @@ use clap::Parser;
 mod cli;
 mod command;
 mod config;
+mod console;
 mod model;
 
 #[tokio::main]

@@ -41,8 +41,9 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
     for entry in glob::glob(module_glob.to_str().unwrap())? {
         if let Ok(path) = entry {
             let module_root = path.parent().unwrap();
+            let module_main = path.iter().last().unwrap().to_str().unwrap();
 
-            let module_cfg = config::module::Cfg::default();
+            let module_cfg = config::module::Cfg::new("", &module_main);
             let module_cfg_file = config::module::Cfg::build_path(&module_root);
 
             let _ =
