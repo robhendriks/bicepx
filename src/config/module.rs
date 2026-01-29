@@ -24,7 +24,7 @@ impl Cfg {
         Cfg {
             name: name.to_owned(),
             main: main.to_owned(),
-            version: Version::new(0, 0, 0),
+            version: Version::new(0, 1, 0),
             tags,
         }
     }
