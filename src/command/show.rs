@@ -28,6 +28,7 @@ pub async fn exec(cli: &Cli, args: &ShowArgs) -> Result<()> {
                 None => Err(anyhow!("Module not found: {}", sub_args.module_name)),
             }
         }
+        ShowCommands::Config => console::write_json(&project.config, args.pretty),
     }
 }
 
@@ -35,6 +36,8 @@ pub async fn exec(cli: &Cli, args: &ShowArgs) -> Result<()> {
 enum ShowCommands {
     #[command(alias = "mod")]
     Module(ModuleArgs),
+    #[command(alias = "cfg")]
+    Config,
 }
 
 #[derive(Debug, Args)]
