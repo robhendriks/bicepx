@@ -6,7 +6,7 @@ use crate::config::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RootCfg {
-    pub modules: ModuleCfg,
+    pub modules: ModulesCfg,
 }
 
 impl RootCfg {
@@ -20,6 +20,6 @@ impl json::Load for RootCfg {}
 impl json::Save for RootCfg {}
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ModuleCfg {
+pub struct ModulesCfg {
     pub glob: PathBuf,
 }

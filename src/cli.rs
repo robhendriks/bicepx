@@ -4,6 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use crate::command::{
+    docs::{self, DocsArgs},
     init::{self, InitArgs},
     list::{self, ListArgs},
     show::{self, ShowArgs},
@@ -24,6 +25,7 @@ impl Cli {
             Commands::Init(args) => init::exec(self, args).await,
             Commands::List(args) => list::exec(self, args).await,
             Commands::Show(args) => show::exec(self, args).await,
+            Commands::Docs(args) => docs::exec(self, args).await,
         }
     }
 }
@@ -33,4 +35,5 @@ enum Commands {
     Init(InitArgs),
     List(ListArgs),
     Show(ShowArgs),
+    Docs(DocsArgs),
 }
