@@ -1,17 +1,12 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use clap::Args;
 use log::{error, info, warn};
-use semver::Version;
 
 use crate::{
     cli::Cli,
-    config::{
-        json::Save,
-        module::ModuleCfg,
-        root::{ModulesCfg, RootCfg},
-    },
+    config::{self, json},
 };
 
 #[derive(Debug, Args)]
@@ -33,32 +28,15 @@ pub async fn exec(cli: &Cli, args: &InitArgs) -> Result<()> {
 }
 
 async fn init_root(cli: &Cli, args: &InitArgs) -> Result<()> {
-    let root_cfg_path = RootCfg::build_path(&cli.root);
-    let root_cfg_path_rel = root_cfg_path.strip_prefix(&cli.root).unwrap();
+    let root_cfg_file = config::root::Cfg::build_path(&cli.root);
 
-    if !args.force && root_cfg_path.exists() {
-        warn!("File exists: {}", root_cfg_path_rel.display());
-        return Ok(());
-    }
-
-    let root_cfg = RootCfg {
-        modules: ModulesCfg {
+    let root_cfg = config::root::Cfg {
+        modules: config::root::Modules {
             glob: args.module_glob.clone(),
         },
     };
 
-    let result = root_cfg.save_json(&root_cfg_path).await;
-
-    match result {
-        Ok(_) => {
-            info!("File created: {}", root_cfg_path_rel.display());
-        }
-        Err(e) => {
-            error!("{:?}", e);
-        }
-    }
-
-    Ok(())
+    create_or_update_json_file(&cli.root, &root_cfg_file, &root_cfg, args.force).await
 }
 
 async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
@@ -68,31 +46,44 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
         if let Ok(path) = entry {
             let module_root = path.parent().unwrap();
 
-            let module_cfg_path = ModuleCfg::build_path(&module_root);
-            let module_cfg_path_rel = module_cfg_path.strip_prefix(&cli.root).unwrap();
+            let module_cfg = config::module::Cfg::default();
+            let module_cfg_file = config::module::Cfg::build_path(&module_root);
 
-            let module_cfg_exists = module_cfg_path.exists();
+            let _ =
+                create_or_update_json_file(&cli.root, &module_cfg_file, &module_cfg, args.force)
+                    .await;
+        }
+    }
 
-            if !args.force && module_cfg_exists {
-                warn!("File exists: {}", module_cfg_path_rel.display());
-                continue;
-            }
+    Ok(())
+}
 
-            let module_cfg = ModuleCfg {
-                name: String::from(""),
-                version: Version::new(0, 0, 0),
-            };
+async fn create_or_update_json_file<T>(
+    root: &Path,
+    file: &Path,
+    contents: &T,
+    overwrite: bool,
+) -> Result<()>
+where
+    T: json::Save,
+{
+    let rel_path = file.strip_prefix(&root).unwrap();
+    let file_exists = file.exists();
 
-            let result = module_cfg.save_json(&module_cfg_path).await;
+    if !overwrite && file_exists {
+        warn!("[Skip] {}", rel_path.display());
+        return Ok(());
+    }
 
-            match result {
-                Ok(_) => {
-                    info!("File created: {}", module_cfg_path_rel.display());
-                }
-                Err(e) => {
-                    error!("{:?}", e);
-                }
-            }
+    let result = contents.save_json(&file).await;
+
+    match result {
+        Ok(_) => {
+            let verb = if file_exists { "Update" } else { "Create" };
+            info!("[{}] {}", verb, rel_path.display());
+        }
+        Err(e) => {
+            error!("{:#?}", e);
         }
     }
 

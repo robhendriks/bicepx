@@ -5,21 +5,21 @@ use serde::{Deserialize, Serialize};
 use crate::config::json;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RootCfg {
-    pub modules: ModulesCfg,
+pub struct Cfg {
+    pub modules: Modules,
 }
 
-impl RootCfg {
+impl Cfg {
     pub fn build_path(base: impl AsRef<Path>) -> PathBuf {
         const FILE_NAME: &'static str = "bicepx.json";
         base.as_ref().join(FILE_NAME)
     }
 }
 
-impl json::Load for RootCfg {}
-impl json::Save for RootCfg {}
+impl json::Load for Cfg {}
+impl json::Save for Cfg {}
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ModulesCfg {
+pub struct Modules {
     pub glob: PathBuf,
 }
