@@ -18,6 +18,14 @@ pub struct Project {
 }
 
 impl Project {
+    pub fn find_module(&self, name: &str) -> Option<&Module> {
+        let lc_name = name.to_lowercase();
+
+        self.modules
+            .iter()
+            .find(|m| m.config.name.to_lowercase() == lc_name)
+    }
+
     pub async fn load(root: impl AsRef<Path>) -> Result<Rc<RefCell<Project>>> {
         let config_file = config::root::Cfg::build_path(&root);
         let config = config::root::Cfg::load_json(&config_file).await?;

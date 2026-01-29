@@ -76,6 +76,7 @@ dependencies = [
  "env_logger",
  "glob",
  "log",
+ "regex",
  "semver",
  "serde",
  "serde_json",

@@ -7,6 +7,7 @@ mod command;
 mod config;
 mod console;
 mod model;
+mod util;
 
 #[tokio::main]
 async fn main() -> Result<()> {

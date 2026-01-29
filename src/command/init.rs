@@ -1,12 +1,13 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use clap::Args;
+use clap::{Args, builder::Str};
 use log::{error, info, warn};
 
 use crate::{
     cli::Cli,
     config::{self, json},
+    util,
 };
 
 #[derive(Debug, Args)]
@@ -34,11 +35,14 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
     let module_glob = cli.root.join(&args.module_glob);
 
     for entry in glob::glob(module_glob.to_str().unwrap())? {
-        if let Ok(path) = entry {
-            let module_root = path.parent().unwrap();
-            let module_main = path.iter().last().unwrap().to_str().unwrap();
+        if let Ok(module_path) = entry {
+            let module_root = module_path.parent().unwrap();
+            let module_main = module_path.iter().last().unwrap().to_str().unwrap();
 
-            let module_cfg = config::module::Cfg::new("", &module_main);
+            let (module_name, module_tags) = infer_module_name_and_tags(&module_path, &module_glob)
+                .unwrap_or_else(|| (String::from(""), vec![]));
+
+            let module_cfg = config::module::Cfg::new(&module_name, &module_main, module_tags);
             let module_cfg_file = config::module::Cfg::build_path(&module_root);
 
             let _ =
@@ -48,6 +52,24 @@ async fn init_modules(cli: &Cli, args: &InitArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn infer_module_name_and_tags(
+    module_path: &Path,
+    module_glob: &Path,
+) -> Option<(String, Vec<String>)> {
+    let comps = util::wildcard::extract_wildcard_components(
+        module_glob.to_str().unwrap(),
+        module_path.to_str().unwrap(),
+    )?;
+
+    let name: String = comps
+        .last()
+        .map_or_else(|| String::from(""), |s| s.to_owned());
+
+    let tags: Vec<String> = comps.iter().rev().skip(1).map(|s| s.to_string()).collect();
+
+    Some((name, tags))
 }
 
 async fn create_or_update_json_file<T>(
