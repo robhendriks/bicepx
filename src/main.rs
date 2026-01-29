@@ -2,6 +2,7 @@ use crate::cli::Cli;
 use anyhow::Result;
 use clap::Parser;
 
+mod az;
 mod cli;
 mod command;
 mod config;
