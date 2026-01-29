@@ -6,7 +6,7 @@ use crate::config::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Cfg {
-    pub modules: Modules,
+    build_dir: PathBuf,
 }
 
 impl Cfg {
@@ -14,12 +14,13 @@ impl Cfg {
         const FILE_NAME: &'static str = "bicepx.json";
         base.as_ref().join(FILE_NAME)
     }
+
+    pub fn new() -> Self {
+        Cfg {
+            build_dir: PathBuf::from(".bicepx"),
+        }
+    }
 }
 
 impl json::Load for Cfg {}
 impl json::Save for Cfg {}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Modules {
-    pub glob: PathBuf,
-}

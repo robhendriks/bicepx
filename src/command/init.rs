@@ -25,12 +25,7 @@ pub async fn exec(cli: &Cli, args: &InitArgs) -> Result<()> {
 
 async fn init_root(cli: &Cli, args: &InitArgs) -> Result<()> {
     let root_cfg_file = config::root::Cfg::build_path(&cli.root);
-
-    let root_cfg = config::root::Cfg {
-        modules: config::root::Modules {
-            glob: args.module_glob.clone(),
-        },
-    };
+    let root_cfg = config::root::Cfg::new();
 
     create_or_update_json_file(&cli.root, &root_cfg_file, &root_cfg, args.force).await
 }
