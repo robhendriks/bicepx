@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use clap::{Args, builder::Str};
+use clap::Args;
 use log::{error, info, warn};
 
 use crate::{

@@ -1,13 +1,15 @@
 use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand};
-use log::info;
 
-use crate::{cli::Cli, model};
+use crate::{cli::Cli, console, model};
 
 #[derive(Debug, Args)]
 pub struct ShowArgs {
     #[command(subcommand)]
     command: ShowCommands,
+
+    #[arg(short, long, default_value_t = false, global = true)]
+    pretty: bool,
 }
 
 pub async fn exec(cli: &Cli, args: &ShowArgs) -> Result<()> {
@@ -15,15 +17,15 @@ pub async fn exec(cli: &Cli, args: &ShowArgs) -> Result<()> {
     let project: std::cell::Ref<'_, model::Project> = project_rc.borrow();
 
     match &args.command {
-        ShowCommands::Module(args) => {
-            let module = project.find_module(&args.module_name);
+        ShowCommands::Module(sub_args) => {
+            let module = project.find_module(&sub_args.module_name);
 
             match module {
                 Some(module) => {
-                    info!("{}", module.root.display());
-                    Ok(())
+                    let json = module.to_json();
+                    console::write_json(&json, args.pretty)
                 }
-                None => Err(anyhow!("Module not found: {}", args.module_name)),
+                None => Err(anyhow!("Module not found: {}", sub_args.module_name)),
             }
         }
     }
