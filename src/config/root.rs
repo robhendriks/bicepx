@@ -6,7 +6,7 @@ use crate::config::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Cfg {
-    build_dir: PathBuf,
+    cache: CacheCfg,
 }
 
 impl Cfg {
@@ -17,9 +17,16 @@ impl Cfg {
 
     pub fn new() -> Self {
         Cfg {
-            build_dir: PathBuf::from(".bicepx"),
+            cache: CacheCfg {
+                dir: PathBuf::from(".bicepx"),
+            },
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct CacheCfg {
+    dir: PathBuf,
 }
 
 impl json::Load for Cfg {}
