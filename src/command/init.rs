@@ -17,6 +17,9 @@ pub struct InitArgs {
 
     #[arg(short, long, default_value = "**/main.bicep")]
     module_glob: PathBuf,
+
+    #[arg(short, long)]
+    default_registry: String,
 }
 
 pub async fn exec(cli: &Cli, args: &InitArgs) -> Result<()> {

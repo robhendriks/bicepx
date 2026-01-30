@@ -3,6 +3,7 @@ use anyhow::Result;
 use clap::Parser;
 
 mod az;
+mod bicep;
 mod cli;
 mod command;
 mod config;
