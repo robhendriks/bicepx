@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::config::json;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Cfg {
     cache: CacheCfg,
 }
@@ -25,6 +26,7 @@ impl Cfg {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct CacheCfg {
     dir: PathBuf,
 }

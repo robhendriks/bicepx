@@ -8,6 +8,7 @@ use crate::config::json;
 pub const FILE_NAME: &'static str = "module.json";
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Cfg {
     pub name: String,
     pub main: String,

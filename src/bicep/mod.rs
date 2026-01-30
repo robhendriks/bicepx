@@ -22,7 +22,7 @@ impl Ctx {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all(deserialize = "camelCase"))]
+#[serde(rename_all = "camelCase")]
 pub struct Cfg {
     pub module_aliases: ModuleAliases,
 }
@@ -43,13 +43,13 @@ impl Cfg {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all(deserialize = "camelCase"))]
+#[serde(rename_all = "camelCase")]
 pub struct ModuleAliases {
     pub br: HashMap<String, RegistryAlias>,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all(deserialize = "camelCase"))]
+#[serde(rename_all = "camelCase")]
 pub struct RegistryAlias {
     pub registry: Option<String>,
     pub module_path: Option<String>,
