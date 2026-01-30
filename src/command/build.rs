@@ -13,5 +13,14 @@ pub async fn exec(_cli: &Cli, _args: &BuildArgs) -> Result<()> {
 
     debug!("{:?}", bicep_cli_version);
 
+    let ctx = bicep::Ctx::init(&_cli.root).await?;
+
+    for entry in ctx.config.module_aliases.br {
+        debug!(
+            "{} {:?} {:?}",
+            entry.0, entry.1.registry, entry.1.module_path
+        );
+    }
+
     Ok(())
 }
